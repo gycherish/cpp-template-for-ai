@@ -1,0 +1,7 @@
+.cache
+.claude
+.codex
+.vscode
+.xmake
+build
+install
