@@ -22,7 +22,7 @@
 | `examples/` | 示例程序目录 |
 | `src/` | 源文件和私有头文件 |
 | `tests/` | 测试文件 |
-| `tools/` | 辅助脚本或外部工具 |
+| `tools/` | 工具目录 |
 | `.claude/` | Claude Code 工作目录, 存放临时设计/分析文件 |
 
 以上目录可视情况增加子目录用于分类。
@@ -108,6 +108,10 @@ includes("tests")
 - 使用空格缩进, 每级 4 个空格, 不使用制表符
 - 函数签名加上缩进不超过 100 个字符时不换行
 - 优先使用左对齐, 不使用额外空格做列对齐(两端对齐)
+- 行尾注释(`//` 与 `///<`)与代码之间仅留一个空格, 不为跨行对齐插入额外空格
+- 语句过长需要换行时, 续行使用固定缩进(语句缩进基础上 +4), 不与上一行的开括号对齐;
+  参数难以拆分时也可将全部参数整体下移一行
+- 代码注释不得引用仓库外的文档(如 `.claude/` 下的设计文档), 注释必须自包含
 - 确保每个文本文件末尾有一个换行
 
 ### 命名规范
@@ -129,7 +133,7 @@ includes("tests")
   2. 系统头文件 (`<unistd.h>`, `<windows.h>` 等)
   3. 标准库头文件 (`<string>`, `<filesystem>` 等)
   4. 三方库头文件 (`<catch2/...>`, `<asio.hpp>` 等)
-  5. 项目内头文件 (`"fsscanner/types.hpp"` 等)
+  5. 项目内头文件 (`"<project-name>/types.hpp"` 等)
 - 不同类型头文件之间不加空行
 
 ### 类型与初始化
@@ -151,6 +155,8 @@ includes("tests")
 
 ### 示例
 
+#### 基本形态
+
 ```cpp
 // class
 class server;
@@ -170,16 +176,10 @@ struct config {
 };
 
 // namespace
-namespace boost {
+namespace myproj {
 namespace detail {
 } // namespace detail
-} // namespace boost
-
-// enum
-enum class color {
-    red,
-    blue
-};
+} // namespace myproj
 
 // function
 void async_accept() {
@@ -203,7 +203,7 @@ while (condition) {
     // code ...
 }
 
-// switch...case
+// switch...case with multiple lines
 switch (label) {
 case label1: {
     break;
@@ -211,6 +211,11 @@ case label1: {
 default: {
     break;
 }
+}
+// switch...case with only return
+switch (label) {
+case label1: return "label1";
+default: return "default";
 }
 
 // for
@@ -229,6 +234,85 @@ const std::error_category& my_category() noexcept {
 
 // constant
 inline constexpr int max_buffer_size = 65536;
+```
+
+#### 好坏对照
+
+行尾注释只留单空格, 不为跨行对齐做填充:
+
+```cpp
+// good
+std::uint32_t id{}; ///< unique object id
+std::uint32_t parent_id{}; ///< zero when root
+
+// bad: extra spaces inserted for column alignment
+std::uint32_t id{};        ///< unique object id
+std::uint32_t parent_id{}; ///< zero when root
+```
+
+换行续行使用固定缩进(+4), 不与开括号对齐:
+
+```cpp
+// good
+std::unique_ptr<server> make_server(const executor& exec,
+    std::string_view address, std::uint16_t port, const options& opts);
+
+// good: wrapping a call expression works the same way
+return std::make_unique<session>(std::move(socket),
+    endpoint{address, port}, opts, pool);
+
+// bad: aligned to the open parenthesis
+std::unique_ptr<server> make_server(const executor& exec,
+                                    std::string_view address, std::uint16_t port,
+                                    const options& opts);
+// bad: first line exceeds the column limit before wrapping
+std::unique_ptr<server> make_server(const executor& exec, std::string_view address, std::uint16_t port,
+    const options& opts);
+```
+
+命名空间一律全限定, 不起别名:
+
+```cpp
+// good
+auto entries = myproj::detail::parse(data);
+auto path = std::filesystem::current_path();
+
+// bad
+using namespace myproj::detail;
+namespace fs = std::filesystem;
+```
+
+enum 默认/无效值放首位; 例外: 线格式枚举按协议取值, 不强加无效值:
+
+```cpp
+// good
+enum class state {
+    idle, // default state comes first
+    running,
+    stopped,
+};
+
+// exception: values are wire format (fixed by the protocol), keep them pure
+enum class opcode : std::uint8_t {
+    request = 0x00,
+    response = 0x01,
+};
+```
+
+类成员过多时的初始化：
+
+```cpp
+// good
+session(std::unique_ptr<channel> ch, const registry& reg, buffer_pool& pool,
+    config cfg, std::uint16_t id)
+    : m_channel{std::move(ch)}, m_registry{reg}, m_pool{pool}
+    , m_config{std::move(cfg)}, m_id{id} {}
+
+// bad
+session(std::unique_ptr<channel> ch, const registry& reg, buffer_pool& pool,
+    config cfg, std::uint16_t id)
+    : m_channel{std::move(ch)}, m_registry{reg}, m_pool{pool},
+      m_config{std::move(cfg)}, m_id{id} {}
 ```
 
 ## 开发流程
