@@ -2,7 +2,7 @@
 # xmake doc-api task into build/doc/Doxyfile. Only XML is generated here; the
 # human-facing rendering is done by Sphinx + Breathe.
 
-PROJECT_NAME           = "cpp-template-for-ai"
+PROJECT_NAME           = "@PROJECT_NAME@"
 PROJECT_NUMBER         = @PROJECT_VERSION@
 OUTPUT_DIRECTORY       = @OUTPUT_DIR@
 

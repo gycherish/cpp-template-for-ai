@@ -6,3 +6,4 @@
 .pixi
 build
 install
+__pycache__

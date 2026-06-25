@@ -1,13 +1,37 @@
-"""Sphinx configuration for cpp-template-for-ai documentation."""
+"""Sphinx configuration for the project documentation."""
 
 import os
+import re
+
+
+def _xmake_config():
+    """Read project name and version from the root xmake.lua (single source of truth).
+
+    Parsing the file directly (rather than taking values from the environment)
+    means sphinx-multiversion picks up each tag's own xmake.lua, so historical
+    builds show the version that was current at that tag.
+    """
+    name, ver = "project", "0.0.0"
+    xmake = os.path.join(os.path.dirname(__file__), "..", "xmake.lua")
+    try:
+        with open(xmake, encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return name, ver
+    m = re.search(r"""set_project\s*\(\s*["']([^"']+)["']""", text)
+    if m:
+        name = m.group(1)
+    m = re.search(r"""set_version\s*\(\s*["']([^"']+)["']""", text)
+    if m:
+        ver = m.group(1)
+    return name, ver
+
 
 # -- Project information -----------------------------------------------------
-project = "cpp-template-for-ai"
+project, version = _xmake_config()
+release = version
 author = "gycherish"
 copyright = "2026, gycherish"
-version = "0.1.0"
-release = "0.1.0"
 
 # -- General -----------------------------------------------------------------
 extensions = [

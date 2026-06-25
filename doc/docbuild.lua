@@ -6,9 +6,7 @@
 -- the terminal; the xmake -v/-D/-q flags are forwarded to control verbosity.
 
 import("core.base.option")
-
--- keep in sync with set_version in the root xmake.lua
-local doc_version = "0.1.0"
+import("core.project.project")
 
 local function docdir()
     return path.join(os.projectdir(), "doc")
@@ -40,7 +38,8 @@ function run_doxygen()
     os.mkdir(out)
     local doxyfile = path.join(out, "Doxyfile")
     os.cp(path.join(docdir(), "Doxyfile.in"), doxyfile)
-    io.replace(doxyfile, "@PROJECT_VERSION@", doc_version, {plain = true})
+    io.replace(doxyfile, "@PROJECT_NAME@", project.name() or "project", {plain = true})
+    io.replace(doxyfile, "@PROJECT_VERSION@", project.version() or "0.0.0", {plain = true})
     io.replace(doxyfile, "@PROJECT_ROOT@", os.projectdir(), {plain = true})
     io.replace(doxyfile, "@OUTPUT_DIR@", out, {plain = true})
     io.replace(doxyfile, "@QUIET@", is_verbose() and "NO" or "YES", {plain = true})
