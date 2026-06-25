@@ -1,0 +1,31 @@
+# Doxygen configuration template. Placeholders (@VAR@) are substituted by the
+# xmake doc-api task into build/doc/Doxyfile. Only XML is generated here; the
+# human-facing rendering is done by Sphinx + Breathe.
+
+PROJECT_NAME           = "cpp-template-for-ai"
+PROJECT_NUMBER         = @PROJECT_VERSION@
+OUTPUT_DIRECTORY       = @OUTPUT_DIR@
+
+INPUT                  = @PROJECT_ROOT@/include @PROJECT_ROOT@/src
+RECURSIVE              = YES
+FILE_PATTERNS          = *.hpp *.h *.cpp *.cc *.cxx
+
+# Extract everything, including as-yet undocumented symbols, so the API page is
+# never empty while the project grows.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+JAVADOC_AUTOBRIEF      = YES
+
+# Breathe consumes XML only.
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = NO
+
+# QUIET is toggled by the xmake verbosity flags (-v/-D); non-fatal on a fresh
+# checkout that has no sources yet.
+QUIET                  = @QUIET@
+WARN_IF_UNDOCUMENTED   = NO
+WARN_AS_ERROR          = NO

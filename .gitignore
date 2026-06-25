@@ -3,5 +3,6 @@
 .codex
 .vscode
 .xmake
+.pixi
 build
 install

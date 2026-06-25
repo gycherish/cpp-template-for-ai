@@ -1,0 +1,38 @@
+# Documentation toolchain for cpp-template-for-ai.
+# Python/Doxygen dependencies are pinned here so the docs build is reproducible
+# across Windows and Linux. xmake drives these tools via `pixi run ...`.
+
+[workspace]
+name = "cpp-template-for-ai-docs"
+version = "0.1.0"
+description = "Documentation toolchain (Sphinx + Breathe + Doxygen)"
+channels = ["conda-forge"]
+platforms = ["win-64", "linux-64"]
+
+[dependencies]
+python = ">=3.11,<3.13"  # newer breathe/sphinx builds lag the latest Python
+sphinx = ">=7.2,<9"      # Sphinx 9 dropped APIs Breathe still relies on
+myst-parser = "*"        # Markdown (MyST) support for Sphinx
+breathe = ">=4.35"          # bridges Doxygen XML into Sphinx
+pydata-sphinx-theme = "*"   # modern theme with a native version switcher
+sphinx-design = "*"         # cards/grids/tabs in Markdown
+sphinx-autobuild = "*"      # live preview server
+doxygen = "*"               # extracts API docs from /// comments
+
+[pypi-dependencies]
+sphinx-multiversion = "*"   # builds one doc site per git tag/branch
+
+# PDF (xmake doc-pdf) compiles the Sphinx LaTeX output and needs a system TeX
+# distribution providing `latexmk` and `xelatex` (TeX Live on Linux, MiKTeX on
+# Windows). For Chinese content, install a CJK font such as Noto CJK / Source Han.
+# A full TeX Live is heavy and partially unavailable on conda-forge, so it is
+# intentionally kept out of pixi; uncomment below if you prefer to vendor it:
+# [target.linux-64.dependencies]
+# texlive-core = "*"
+
+# Convenience entry points for direct use (xmake orchestrates Doxygen first):
+[tasks]
+html = "sphinx-build -b html doc build/doc/html"
+serve = "sphinx-autobuild doc build/doc/html"
+pdf = "sphinx-build -M latexpdf doc build/doc/pdf"
+versions = "sphinx-multiversion doc build/doc/versions"
