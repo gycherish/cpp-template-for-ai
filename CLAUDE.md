@@ -46,7 +46,7 @@
 - 协程仅用于异步计算/异步 IO 场景, 普通同步逻辑直接走函数, 不要套协程
 - 异步操作必须满足结构化并发要求
 - 编排框架使用 [stdexec](https://github.com/nvidia/stdexec)
-- 网络/IO 框架使用 [asio](https://think-async.com/Asio/), 必要时通过 stdexec 中提供的 `use_sender` 将 asio 异步 IO 纳入 stdexec
+- 异步 IO 框架使用 [asio](https://think-async.com/Asio/), 必要时通过 stdexec 中提供的 `use_sender` 将 asio 异步 IO 纳入 stdexec
 
 ### 依赖管理
 
