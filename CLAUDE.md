@@ -1,16 +1,20 @@
-# Agent 开发指南
+# 项目开发指南
+
+本文件是面向在本仓库工作的 AI Agent 的权威指令, 优先级高于默认行为, 必须严格遵守。
 
 ## 核心原则
 
-- 仅做**最小必要修改**
-- 优先保证可读性和正确性而不是炫技
-- 测试优先, 尽可能先写测试再实现功能
-- 提交前必须通过编译和测试
-- 保持最小化提交原则, 一次提交只包含一个功能或 bug 修复
-- 除非显式说明, 所有库和二进制都需要满足跨平台要求(Windows 和 POSIX 平台, 其中 POSIX 平台优先以 Linux 为主)
-- 尽量减少文件 IO 和内存拷贝, 数据流转优先使用引用/视图传递
-- 尽可能消除本项目内产生的所有警告(三方库自身警告除外)
-- 临时生成的设计/分析文件统一放到当前项目的 `.claude/` 目录, 不要散落到项目根目录
+- **最小必要修改**: 只改达成目标所必需的部分, 正确性与可读性优先于炫技
+- **测试优先**: 尽可能先写测试再实现功能
+- **跨平台**: 除非显式说明, 所有库与二进制都要同时满足 Windows 和 POSIX(POSIX 以 Linux 为主)
+- **最小提交**: 一次提交只包含一个功能或一个 bug 修复, 遵循 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+- **性能默认**: 数据流转优先用引用/视图传递, 尽量减少文件 IO 与内存拷贝
+- **零警告**: 消除本项目产生的所有编译警告(三方库自身警告除外)
+
+> **红线(未经允许严禁)**:
+> 1. 擅自提交 —— 所有改动须经审核通过后才能 commit
+> 2. 在 `main` 上执行 force push、reset 等改写历史的操作
+> 3. 跳过编译或测试就提交 —— 提交前必须通过编译和测试
 
 ## 项目结构
 
@@ -19,58 +23,82 @@
 | 目录 | 用途 |
 |------|------|
 | `include/<project-name>/` | 公共头文件 |
-| `examples/` | 示例程序目录 |
 | `src/` | 源文件和私有头文件 |
+| `examples/` | 示例程序 |
 | `tests/` | 测试文件 |
-| `tools/` | 工具目录 |
+| `tools/` | 工具 |
+| `doc/` | 文档源(设计/手册/开发/API) |
 | `.claude/` | Claude Code 工作目录, 存放临时设计/分析文件 |
 
-以上目录可视情况增加子目录用于分类。
+以上目录可视情况增加子目录用于分类。临时生成的设计/分析文件一律放 `.claude/`, 不要散落到项目根目录。
 
-### 命名规则
+### 命名
 
-- 名称必须含义精确, 贴合项目定位
-- 优先使用缩写, 在缩写基础上使用 `kebab-case` 格式
-- 名称小于 10 个字符时可省略 `-`
-- 严禁使用 `cli` 等含义宽泛的命名
+**文件、目录与程序**
+
+- 名称含义精确, 贴合项目定位; 严禁 `cli` 等含义宽泛的命名
+- 优先使用缩写, 在缩写基础上用 `kebab-case`; 名称小于 10 个字符时可省略 `-`
+- 可执行程序名用 `kebab-case`; 程序仅由单个源文件构成时, 该源文件与程序同名
+
+**代码标识符**
+
+- 优先 `snake_case`, 见名知意, 尽可能保持在一个单词内
+- 不在变量名中使用体现其类型的前缀; 所有命名不得出现中文
+
+**配置文件**
+
+- 优先 JSON5 格式, 配置项使用 `camelCase`
 
 ## 技术栈
 
-### 异步架构
-
-- 所有文件 IO、网络 IO 必须以异步形式实现
-- 优先使用协程表达异步操作
-- 协程仅用于异步计算/异步 IO 场景, 普通同步逻辑直接走函数, 不要套协程
-- 异步操作必须满足结构化并发要求
-- 使用 [stdexec](https://github.com/nvidia/stdexec) 作为核心异步任务编排框架
-- 使用 [asio](https://think-async.com/Asio/) 作为网络/IO 框架, 必要时通过 `use_sender` 将 asio 异步 IO 纳入 stdexec
-
 ### 语言标准
 
-- C++23 及以上
-- 严格遵守 [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
+- C++23 及以上, 严格遵守 [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines)
 - 优先使用 C++ Ranges 库中的算法
 - 优先使用 `std::filesystem` 操作文件系统
 
-### 构建系统
+### 异步架构
 
-使用 [xmake](https://xmake.io/) 构建:
+- 所有文件 IO、网络 IO 必须以异步形式实现, 优先使用协程表达
+- 协程仅用于异步计算/异步 IO 场景, 普通同步逻辑直接走函数, 不要套协程
+- 异步操作必须满足结构化并发要求
+- 编排框架使用 [stdexec](https://github.com/nvidia/stdexec)
+- 网络/IO 框架使用 [asio](https://think-async.com/Asio/), 必要时通过 stdexec 中提供的 `use_sender` 将 asio 异步 IO 纳入 stdexec
+
+### 依赖管理
+
+- C++ 依赖全部通过 xmake 管理(`add_requires`)
+- **非 C++ 的外部工具(如 Python)优先用 [pixi](https://pixi.sh/) 管理**, 保持环境可复现、不污染系统
+- 常用三方库:
+
+| 库 | 用途 |
+|----|------|
+| [catch2](https://github.com/catchorg/Catch2) | 测试框架 |
+| [spdlog](https://github.com/gabime/spdlog) | 日志 |
+| [argparse](https://github.com/p-ranav/argparse) | 命令行解析 |
+| [nlohmann_json](https://github.com/nlohmann/json) | JSON 解析 |
+
+其他三方库可自行决定。
+
+## 构建与命令
+
+使用 [xmake](https://xmake.io/) 构建, 开发过程中始终编译 Debug 版本。命令均可追加 `-yvD` 获取详细诊断信息。
 
 ```
-xmake f -m debug <other-option> # 配置项目，开发过程中始终编译 Debug 版本
-xmake build [target]            # 编译
-xmake test                      # 运行测试
+xmake f -m debug <other-option>   # 配置项目
+xmake build [target]              # 编译
+xmake test                        # 运行测试
+xmake format                      # 按 .clang-format 格式化(手工编辑后校正用)
 ```
 
-以上命令均可传递 `-yvD` 获取详细诊断信息。
-
-`compile_commands.json` 不会随 `xmake build` 自动写入 `build/` 目录, 需手动导出:
+`compile_commands.json` 不会随 `xmake build` 自动写入 `build/`, 需手动导出:
 
 ```
 xmake project -k compile_commands build
 ```
 
-xmake 根配置文件 `xmake.lua` 模板如下:
+根配置文件 `xmake.lua` 模板:
+
 ```lua
 set_xmakever("3.0.0")
 set_project("<project-name>")
@@ -89,54 +117,43 @@ includes("src")
 includes("tests")
 ```
 
-### 三方库
+### 文档
 
-| 库 | 用途 |
-|----|------|
-| [catch2](https://github.com/catchorg/Catch2) | 测试框架 |
-| [spdlog](https://github.com/gabime/spdlog) | 日志 |
-| [argparse](https://github.com/p-ranav/argparse) | 命令行解析 |
-| [nlohmann_json](https://github.com/nlohmann/json) | JSON 解析 |
+文档工具链(Doxygen/Sphinx 等)由 pixi 管理, 详见 `doc/`。
 
-其他三方库可自行决定, 所有依赖通过 xmake 管理(`add_requires`)。
+```
+pixi install            # 首次安装文档工具链
+xmake doc               # 构建 HTML 站点
+xmake doc-serve         # 本地预览(热重载)
+xmake doc-pdf [--engine=xelatex|lualatex]   # 生成 PDF(需系统 TeX)
+xmake doc-versions      # 逐版本构建并生成版本切换器
+```
 
 ## 编码规范
 
-### 编码与格式
+### 格式
 
-- 统一使用 UTF-8 编码
-- 使用空格缩进, 每级 4 个空格, 不使用制表符
+> 缩进、行尾、文件末换行等机械规则已由根目录 `.clang-format` 与 `.editorconfig` 固化, 手工编辑后可用 `xmake format` 校正。
+> 但你(AI)产出的代码必须本来就符合以下规则, 不能依赖事后格式化。
+
+- 统一使用 UTF-8 编码; 每级 4 个空格缩进, 不使用制表符; 每个文本文件末尾保留一个换行
 - 函数签名加上缩进不超过 120 个字符时不换行
-- 优先使用左对齐, 不使用额外空格做列对齐(两端对齐)
-- 行尾注释(`//` 与 `///<`)与代码之间仅留一个空格, 不为跨行对齐插入额外空格
+- 优先左对齐, 不使用额外空格做列对齐(两端对齐); 行尾注释(`//` 与 `///<`)与代码之间仅留一个空格
 - 语句过长需要换行时, 续行使用固定缩进(语句缩进基础上 +4), 不与上一行的开括号对齐;
   参数难以拆分时也可将全部参数整体下移一行
 - 换行点应使各行内容均衡成组, 不要贪婪填满首行后悬挂少量参数
-- 代码注释不得引用仓库外的文档(如 `.claude/` 下的设计文档), 注释必须自包含
-- 确保每个文本文件末尾有一个换行
-
-### 命名规范
-
-- 优先使用 `snake_case` 命名法
-- 命名应见名知意, 避免晦涩缩写, 尽可能保持在一个单词内
-- 不要在变量名称中使用体现其类型的前缀
-- 所有命名中不得出现中文
-- 可执行程序名使用 `kebab-case` 格式
-- 可执行程序仅由单个源文件构成时, 该源文件与程序同名
-- 配置文件优先使用 JSON5 格式, 配置项使用 `camelCase`
 
 ### 头文件与引用
 
 - 使用 `#pragma once` 保护头文件
 - 项目内头文件使用 `""` 引用, 其他使用 `<>` 引用
 - 只引入当前翻译单元显式用到的头文件, 不要依赖间接传递引入的符号
-- include 顺序与分组规则:
+- include 顺序与分组规则(不同类型之间不加空行):
   1. 当前翻译单元对应的头文件, 后跟一个空行
   2. 系统头文件 (`<unistd.h>`, `<windows.h>` 等)
   3. 标准库头文件 (`<string>`, `<filesystem>` 等)
   4. 三方库头文件 (`<catch2/...>`, `<asio.hpp>` 等)
   5. 项目内头文件 (`"<project-name>/types.hpp"` 等)
-- 不同类型头文件之间不加空行
 
 ### 类型与初始化
 
@@ -151,8 +168,8 @@ includes("tests")
 
 ### 注释
 
-- 统一使用 `doxygen` 风格注释，即注释符号为: `///`
-- 所有注释使用英文
+- 统一使用 `doxygen` 风格注释, 即注释符号为 `///`, 所有注释使用英文
+- 注释必须自包含, 不得引用仓库外的文档(如 `.claude/` 下的设计文档)
 - 当函数签名自解释时不要添加太多无意义的注释
 
 ### 示例
@@ -301,7 +318,7 @@ enum class opcode : std::uint8_t {
 };
 ```
 
-类成员过多时的初始化：
+类成员过多时的初始化:
 
 ```cpp
 // good
@@ -324,12 +341,7 @@ session(std::unique_ptr<channel> ch, const registry& reg, buffer_pool& pool,
 - 在 `dev` 分支进行功能开发, 完成并测试通过后合入 `main`
 - 并行开发时基于 `dev` 创建新分支并使用 `git worktree`, 完成后合入 `dev` 并删除分支
 - 如果当前已经处于 `git worktree` 环境, 则必须在该环境中进行开发, 且严禁切换分支
-- 未经允许, 严禁在 `main` 分支上执行强制推送、重置等篡改历史的操作
-- 未经允许，严禁擅自提交，所有改动必须经过审核通过后才能提交
-
-### 提交规范
-
-遵循 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)。
+- 提交与历史相关的红线见文首"核心原则"
 
 ### 版本管理
 
