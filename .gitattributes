@@ -1,0 +1,3 @@
+# Normalize all text files to LF in the repository and working tree, matching
+# the project's UTF-8 + LF convention (also silences CRLF warnings on Windows).
+* text=auto eol=lf

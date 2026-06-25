@@ -1,0 +1,49 @@
+# Encodes the C++ style documented in CLAUDE.md, as a safety net for manual
+# edits and `xmake format`. The prose rules in CLAUDE.md remain the source of
+# truth; validate this file against real sources once the project has code.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: Latest
+
+ColumnLimit: 120
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: true
+
+# references/pointers bind to the type: `const server& srv`
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# braces attach, except `else`/`catch` break onto their own line
+BreakBeforeBraces: Stroustrup
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# no column alignment / two-side justification; wrap with a fixed +4 indent
+AlignAfterOpenBracket: DontAlign
+AlignOperands: DontAlign
+AlignTrailingComments: false
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+SpacesBeforeTrailingComments: 1
+SpaceBeforeParens: ControlStatements
+
+# constructor initializers break before the comma when wrapped
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerIndentWidth: 4
+PackConstructorInitializers: CurrentLine
+
+# respect the documented manual include grouping instead of reordering
+SortIncludes: false
+IncludeBlocks: Preserve
+
+InsertNewlineAtEOF: true
