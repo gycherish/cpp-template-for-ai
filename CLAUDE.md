@@ -1,6 +1,6 @@
 # 项目开发指南
 
-本文件是面向在本仓库工作的 AI Agent 的权威指令, 优先级高于默认行为, 必须严格遵守。
+本文件是面向在本仓库工作的 AI 编码工具的权威指令, 优先级高于默认行为, 必须严格遵守。
 
 ## 核心原则
 
@@ -28,26 +28,9 @@
 | `tests/` | 测试文件 |
 | `tools/` | 工具 |
 | `doc/` | 文档源(设计/手册/开发/API) |
-| `.claude/` | Claude Code 工作目录, 存放临时设计/分析文件 |
+| `.claude/`、`.codex/` 等 | 各 AI 工具的工作目录, 存放临时设计/分析文件(已被 .gitignore 忽略) |
 
-以上目录可视情况增加子目录用于分类。临时生成的设计/分析文件一律放 `.claude/`, 不要散落到项目根目录。
-
-### 命名
-
-**文件、目录与程序**
-
-- 名称含义精确, 贴合项目定位; 严禁 `cli` 等含义宽泛的命名
-- 优先使用缩写, 在缩写基础上用 `kebab-case`; 名称小于 10 个字符时可省略 `-`
-- 可执行程序名用 `kebab-case`; 程序仅由单个源文件构成时, 该源文件与程序同名
-
-**代码标识符**
-
-- 优先 `snake_case`, 见名知意, 尽可能保持在一个单词内
-- 不在变量名中使用体现其类型的前缀; 所有命名不得出现中文
-
-**配置文件**
-
-- 优先 JSON5 格式, 配置项使用 `camelCase`
+以上目录可视情况增加子目录用于分类。临时生成的设计/分析文件放当前 AI 工具自己的工作目录(如 `.claude/`、`.codex/`), 不要散落到项目根目录。
 
 ## 技术栈
 
@@ -115,6 +98,7 @@ add_includedirs("include")
 
 includes("src")
 includes("tests")
+includes("doc")
 ```
 
 ### 文档
@@ -131,222 +115,15 @@ xmake doc-versions      # 逐版本构建并生成版本切换器
 
 ## 编码规范
 
-### 格式
+C++ 的命名、格式、头文件与引用、类型与初始化、语言用法、注释及完整示例, 统一收录在 [编码风格指南](doc/dev/coding-style.md)。
 
-> 缩进、行尾、文件末换行等机械规则已由根目录 `.clang-format` 与 `.editorconfig` 固化, 手工编辑后可用 `xmake format` 校正。
-> 但你(AI)产出的代码必须本来就符合以下规则, 不能依赖事后格式化。
-
-- 统一使用 UTF-8 编码; 每级 4 个空格缩进, 不使用制表符; 每个文本文件末尾保留一个换行
-- 函数签名加上缩进不超过 120 个字符时不换行
-- 优先左对齐, 不使用额外空格做列对齐(两端对齐); 行尾注释(`//` 与 `///<`)与代码之间仅留一个空格
-- 语句过长需要换行时, 续行使用固定缩进(语句缩进基础上 +4), 不与上一行的开括号对齐;
-  参数难以拆分时也可将全部参数整体下移一行
-- 换行点应使各行内容均衡成组, 不要贪婪填满首行后悬挂少量参数
-
-### 头文件与引用
-
-- 使用 `#pragma once` 保护头文件
-- 项目内头文件使用 `""` 引用, 其他使用 `<>` 引用
-- 只引入当前翻译单元显式用到的头文件, 不要依赖间接传递引入的符号
-- include 顺序与分组规则(不同类型之间不加空行):
-  1. 当前翻译单元对应的头文件, 后跟一个空行
-  2. 系统头文件 (`<unistd.h>`, `<windows.h>` 等)
-  3. 标准库头文件 (`<string>`, `<filesystem>` 等)
-  4. 三方库头文件 (`<catch2/...>`, `<asio.hpp>` 等)
-  5. 项目内头文件 (`"<project-name>/types.hpp"` 等)
-
-### 类型与初始化
-
-- 定义 enum 时, 默认值/无效值应放在首位
-- 成员变量定义时优先使用 `{}` 初始化, 具有默认构造函数的类型可以省略 `{}`
-- 系统头文件和 C 库中的类型应使用 `::` 引用
-
-### 语言用法
-
-- 函数参数和数据传递优先使用引用(必要时配合 `const`/`std::span`/`std::string_view`), 避免无谓拷贝
-- 不要使用 `using` 给命名空间起别名(包括 `using namespace ...;` 和 `namespace x = ...;`), 一律写全限定名
-
-### 注释
-
-- 统一使用 `doxygen` 风格注释, 即注释符号为 `///`, 所有注释使用英文
-- 注释必须自包含, 不得引用仓库外的文档(如 `.claude/` 下的设计文档)
-- 当函数签名自解释时不要添加太多无意义的注释
-
-### 示例
-
-#### 基本形态
-
-```cpp
-// class
-class server;
-class session {
-public:
-    explicit session(const server& srv) {
-        // code...
-    }
-
-private:
-    server& m_srv;
-};
-
-// struct
-struct config {
-    int timeout{5};
-};
-
-// namespace
-namespace myproj {
-namespace detail {
-} // namespace detail
-} // namespace myproj
-
-// function
-void async_accept() {
-    // code ...
-}
-
-// operator
-int a = b + c;
-int a = b > c ? b : c;
-
-// if
-if (condition) {
-    // code ...
-}
-else {
-    // code ...
-}
-
-// while
-while (condition) {
-    // code ...
-}
-
-// switch...case with multiple lines
-switch (label) {
-case label1: {
-    break;
-}
-default: {
-    break;
-}
-}
-// switch...case with only return
-switch (label) {
-case label1: return "label1";
-default: return "default";
-}
-
-// for
-for (int i = 0; i < cnt; ++i) {
-    // code ...
-}
-
-// global variable
-config g_cfg;
-
-// global variable via accessor
-const std::error_category& my_category() noexcept {
-    static my_error_category category;
-    return category;
-}
-
-// constant
-inline constexpr int max_buffer_size = 65536;
-```
-
-#### 好坏对照
-
-行尾注释只留单空格, 不为跨行对齐做填充:
-
-```cpp
-// good
-std::uint32_t id{}; ///< unique object id
-std::uint32_t parent_id{}; ///< zero when root
-
-// bad: extra spaces inserted for column alignment
-std::uint32_t id{};        ///< unique object id
-std::uint32_t parent_id{}; ///< zero when root
-```
-
-换行续行使用固定缩进(+4), 不与开括号对齐:
-
-```cpp
-// good
-std::unique_ptr<server> make_server(const executor& exec,
-    std::string_view address, std::uint16_t port, const options& opts);
-
-// good: wrapping a call expression works the same way
-return std::make_unique<session>(std::move(socket),
-    endpoint{address, port}, opts, pool);
-
-// bad: aligned to the open parenthesis
-std::unique_ptr<server> make_server(const executor& exec,
-                                    std::string_view address, std::uint16_t port,
-                                    const options& opts);
-// bad: first line exceeds the column limit before wrapping
-std::unique_ptr<server> make_server(const executor& exec, std::string_view address, std::uint16_t port,
-    const options& opts);
-```
-
-命名空间一律全限定, 不起别名:
-
-```cpp
-// good
-auto entries = myproj::detail::parse(data);
-auto path = std::filesystem::current_path();
-
-// bad
-using namespace myproj::detail;
-namespace fs = std::filesystem;
-```
-
-enum 默认/无效值放首位; 例外: 线格式枚举按协议取值, 不强加无效值:
-
-```cpp
-// good
-enum class state {
-    idle, // default state comes first
-    running,
-    stopped,
-};
-
-// exception: values are wire format (fixed by the protocol), keep them pure
-enum class opcode : std::uint8_t {
-    request = 0x00,
-    response = 0x01,
-};
-```
-
-类成员过多时的初始化:
-
-```cpp
-// good
-session(std::unique_ptr<channel> ch, const registry& reg, buffer_pool& pool,
-    config cfg, std::uint16_t id)
-    : m_channel{std::move(ch)}, m_registry{reg}, m_pool{pool}
-    , m_config{std::move(cfg)}, m_id{id} {}
-
-// bad
-session(std::unique_ptr<channel> ch, const registry& reg, buffer_pool& pool,
-    config cfg, std::uint16_t id)
-    : m_channel{std::move(ch)}, m_registry{reg}, m_pool{pool},
-      m_config{std::move(cfg)}, m_id{id} {}
-```
+**编写/修改 C++ 代码, 或新建源文件、构建目标前, 必须先阅读该指南并严格遵循。** 其中的格式类机械规则另由根目录 `.clang-format` 与 `.editorconfig` 固化, 手工编辑后可用 `xmake format` 校正。
 
 ## 开发流程
 
-### Git 工作流
+分支模型、分支/提交命名、合并与发布、版本(SemVer)、git worktree 用法详见 [Git 工作流](doc/dev/git-workflow.md)。核心约束:
 
-- 在 `dev` 分支进行功能开发, 完成并测试通过后合入 `main`
-- 并行开发时基于 `dev` 创建新分支并使用 `git worktree`, 完成后合入 `dev` 并删除分支
-- 如果当前已经处于 `git worktree` 环境, 则必须在该环境中进行开发, 且严禁切换分支
-- 提交与历史相关的红线见文首"核心原则"
-
-### 版本管理
-
-遵循 [SemVer](https://semver.org/), 在 `xmake.lua` 中修改:
-
-```lua
-set_version("0.1.0", {build = "%Y%m%d"})
-```
+- **协作模式**: 单人开发(无多人协作)可直接在 `main` 上开发提交; 一旦多人协作, 必须改走下列标准分支流程
+- 多人协作: `main`、`dev` 为受保护长期分支, 只接受评审通过的合并; 开发在从 `dev` 切出的短期分支(`feat/*`、`fix/*` 等)上进行, 完成后合回 `dev` 并删除
+- 并行任务用 `git worktree` 挂独立目录; 处于 worktree 中必须在该环境开发, 严禁切换分支
+- 提交遵循 Conventional Commits; 版本遵循 SemVer; 提交/历史红线见文首

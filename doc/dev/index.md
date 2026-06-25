@@ -5,6 +5,8 @@
 ```{toctree}
 :maxdepth: 1
 
+coding-style
+git-workflow
 ```
 
 ## 构建与测试
@@ -15,4 +17,4 @@ xmake build             # 编译
 xmake test              # 运行测试
 ```
 
-完整的编码规范与 Git 工作流见仓库根目录的 `CLAUDE.md`。
+编码风格见 [coding-style](coding-style.md); 分支/提交/发布流程见 [git-workflow](git-workflow.md)。
