@@ -1,6 +1,6 @@
 # 开发文档
 
-面向贡献者：构建、测试、编码规范与提交流程。新增章节时在下方 `toctree` 中登记。
+本节面向参与开发的人，既覆盖本地构建、代码风格、分支提交等工程约定，也记录各子系统的内部设计与实现细节。动手改代码前先读这里，既能让实现、测试与提交遵循同一套规范，也能快速摸清现有实现的结构与约定。
 
 ```{toctree}
 :maxdepth: 1
@@ -8,13 +8,3 @@
 coding-style
 git-workflow
 ```
-
-## 构建与测试
-
-```text
-xmake f -m debug        # 配置（开发期使用 Debug）
-xmake build             # 编译
-xmake test              # 运行测试
-```
-
-编码风格见 [coding-style](coding-style.md); 分支/提交/发布流程见 [git-workflow](git-workflow.md)。

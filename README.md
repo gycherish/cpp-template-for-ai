@@ -19,7 +19,7 @@
 | `src/` | 源文件与私有头文件 |
 | `tests/` | 测试 |
 | `examples/` | 示例程序 |
-| `doc/` | 文档源(设计/手册/开发/API) |
+| `doc/` | 文档源(产品/需求/设计/决策/手册/开发/API) |
 
 ## 环境要求
 
@@ -49,9 +49,13 @@ xmake doc-versions    # 逐版本构建 + 版本切换器
 
 ## 文档导航
 
-- 编码风格: [doc/dev/coding-style.md](doc/dev/coding-style.md)
-- Git 工作流: [doc/dev/git-workflow.md](doc/dev/git-workflow.md)
-- 完整站点: 运行 `xmake doc` 后打开 `build/doc/html/index.html`
+| 文档 | 路径 |
+|------|------|
+| 产品与需求 | [doc/product/index.md](doc/product/index.md) |
+| 架构与设计 | [doc/design/index.md](doc/design/index.md) |
+| 决策记录 | [doc/adr/index.md](doc/adr/index.md) |
+| 开发文档 | [doc/dev/index.md](doc/dev/index.md) |
+| 完整站点 | 运行 `xmake doc` 后打开 `build/doc/html/index.html` |
 
 ## 面向 AI 工具
 
