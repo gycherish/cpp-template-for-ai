@@ -51,6 +51,7 @@
 - 函数参数和数据传递优先使用引用(必要时配合 `const`/`std::span`/`std::string_view`), 避免无谓拷贝
 - 单参数构造函数加 `explicit`, 避免隐式转换
 - 不要使用 `using` 给命名空间起别名(包括 `using namespace ...;` 和 `namespace x = ...;`), 一律写全限定名
+- 不要使用魔数: 有含义的字面量用具名 `inline constexpr` 常量或作用域枚举承载
 
 ## 注释
 
